@@ -151,17 +151,47 @@
     .packs{ grid-template-columns:repeat(3,1fr); }
     .grid-games{ grid-template-columns:repeat(2,1fr); }
   }
+  /* Sticky mobile buy bar (shown after a pack is picked) */
+  #mbar{ display:none; }
+  body.mbar-on{ padding-bottom:74px; }
+
   @media (max-width:640px){
-    .slide{ padding:38px 22px; } .slide h1{ font-size:25px; }
-    .grid-cats{ grid-template-columns:repeat(2,1fr); }
-    .packs{ grid-template-columns:repeat(2,1fr); }
+    .strip{ font-size:12px; padding:7px 10px; }
+    header{ padding:10px 0 2px; }
+    .logo .gem{ width:36px; height:36px; font-size:19px; border-radius:10px; }
+    .logo .name{ font-size:20px; }
+    .logo .tag{ font-size:8.5px; }
+    .login-btn{ padding:9px 18px; font-size:12px; }
+    nav{ order:3; width:100%; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:2px 0 6px; scrollbar-width:none; }
+    nav::-webkit-scrollbar{ display:none; }
+    nav a{ white-space:nowrap; padding:8px 15px; font-size:12.5px; }
+    .hero{ margin-top:6px; }
+    .hero .arrow{ display:none; }
+    .slide{ padding:30px 20px 42px; background:linear-gradient(100deg,rgba(7,10,20,.95) 42%,rgba(7,10,20,.55)), var(--art) center/cover; }
+    .slide h1{ font-size:23px; }
+    .slide p{ font-size:12.5px; margin:10px 0 16px; }
+    .cta{ padding:11px 24px; font-size:13px; }
+    section{ margin-top:26px; }
+    .stitle h2{ font-size:17px; }
+    .grid-cats{ grid-template-columns:repeat(2,1fr); gap:10px; }
+    .cat .art{ height:92px; font-size:34px; }
+    .packs{ grid-template-columns:repeat(2,1fr); gap:10px; }
+    .pack{ padding:13px 8px; }
+    .pack .amt{ font-size:16px; }
     .ids{ grid-template-columns:1fr; }
     .paytabs{ grid-template-columns:1fr; }
     .fcols{ grid-template-columns:1fr; }
-    .pbody,.fmt,.pills{ padding-left:16px; padding-right:16px; margin-left:16px; margin-right:16px; }
-    .pills{ margin-left:0; margin-right:0; padding-left:16px; }
-    .fmt{ margin-left:16px; margin-right:16px; }
-    nav a{ padding:7px 12px; font-size:12px; }
+    .pbody{ padding:16px 16px 22px; }
+    .fmt{ margin:12px 16px 0; }
+    .pills{ flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding:14px 16px 2px; scrollbar-width:none; }
+    .pills::-webkit-scrollbar{ display:none; }
+    .tpill{ white-space:nowrap; }
+    .payable b{ font-size:24px; }
+    #mbar.on{ display:flex; position:fixed; left:0; right:0; bottom:0; z-index:40; background:#10141f; border-top:1px solid var(--line); padding:10px 14px; align-items:center; gap:12px; box-shadow:0 -6px 18px rgba(0,0,0,.45); }
+    #mbar .mi{ flex:1; min-width:0; }
+    #mbar .mn{ font-size:12px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #mbar .mp{ font-size:16px; font-weight:800; color:var(--grn); }
+    #mbar button{ background:linear-gradient(135deg,var(--org),var(--org2)); border:none; color:#fff; font-family:inherit; font-weight:800; font-size:14px; padding:13px 22px; border-radius:10px; cursor:pointer; }
   }
 </style>
 </head>
@@ -331,6 +361,11 @@
   </div>
 </footer>
 
+<div id="mbar">
+  <div class="mi"><div class="mn" id="mbName">—</div><div class="mp" id="mbPrice">—</div></div>
+  <button onclick="buyNow()">Buy Now →</button>
+</div>
+
 <div class="modal" id="modal">
   <div class="mbox">
     <h3>Accounts are coming soon</h3>
@@ -390,6 +425,14 @@
     document.getElementById('dItems').textContent = pk ? pk.n : '—';
     document.getElementById('dPrice').textContent = pk ? inr(pk.p) : '—';
     document.getElementById('payTotal').textContent = pk ? inr(pk.p) : '₹0';
+    var mbar = document.getElementById('mbar');
+    if (pk){
+      document.getElementById('mbName').textContent = pk.n;
+      document.getElementById('mbPrice').textContent = inr(pk.p);
+      mbar.classList.add('on'); document.body.classList.add('mbar-on');
+    } else {
+      mbar.classList.remove('on'); document.body.classList.remove('mbar-on');
+    }
   }
   function setCat(c){
     cat = c;
@@ -443,6 +486,14 @@
     dotsBox.querySelectorAll('i').forEach(function(d, j){ d.classList.toggle('on', j === cur); });
   }
   function moveSlide(d){ go(cur + d); restart(); }
+  var tx = null;
+  document.querySelector('.hero').addEventListener('touchstart', function(e){ tx = e.touches[0].clientX; }, {passive:true});
+  document.querySelector('.hero').addEventListener('touchend', function(e){
+    if (tx === null) return;
+    var dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 40) moveSlide(dx < 0 ? 1 : -1);
+    tx = null;
+  }, {passive:true});
   var timer = setInterval(function(){ go(cur + 1); }, 5000);
   function restart(){ clearInterval(timer); timer = setInterval(function(){ go(cur + 1); }, 5000); }
   go(0);
